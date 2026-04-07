@@ -2,42 +2,6 @@ import pygame
 import sys
 from utils.classes import Reta
 
-def desenhar_reta_DDA(t1, t2):
-    print("Traçando reta usando o algoritmo DDA")
-    
-    # Extrai as coordenadas X e Y das tuplas
-    x1, y1 = t1
-    x2, y2 = t2
-    
-    # 1. Calcula as diferenças (Deltas)
-    dx = x2 - x1
-    dy = y2 - y1
-    
-    # 2. Descobre o número total de passos baseando-se no maior deslocamento absoluto
-    passos = max(abs(dx), abs(dy))
-    
-    # Proteção: Se a pessoa clicou duas vezes exatamente no mesmo pixel
-    if passos == 0:
-        tela.set_at((x1, y1), PRETO)
-        return
-        
-    # 3. Calcula a taxa de incremento para os eixos (Isso vai gerar números com decimais)
-    x_inc = dx / passos
-    y_inc = dy / passos
-    
-    # 4. Define o ponto de partida (usamos float porque vamos somar decimais a eles)
-    x = float(x1)
-    y = float(y1)
-    
-    # 5. Loop de rasterização: damos um passo de cada vez até o destino
-    for i in range(passos + 1):
-        # Arredonda a posição atual para o pixel inteiro mais próximo e pinta
-        tela.set_at((round(x), round(y)), PRETO)
-        
-        # Prepara a posição para o próximo pixel da iteração seguinte
-        x += x_inc
-        y += y_inc
-
 # 1. Inicialização ⚙️
 pygame.init() # "Liga" todos os módulos do Pygame
 
@@ -81,6 +45,7 @@ while rodando:
                     reta = Reta(pontos_reta[0], pontos_reta[1])
                     reta.reta_dda(tela)
                     array_estruturas.append(reta)
+                    pontos_reta.clear()
                     modo_atual = "livre"
                     print(f"Mudando o modo para {modo_atual}")
                     continue

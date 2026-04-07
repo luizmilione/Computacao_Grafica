@@ -5,6 +5,7 @@ class Reta:
         self.x2, self.y2 = t2
 
     def reta_dda(self, tela):
+        print("Traçando reta usando DDA")
         PRETO = (0, 0, 0)
         # 1. Calcula as diferenças (Deltas)
         dx = self.x2 - self.x1
@@ -23,8 +24,8 @@ class Reta:
         y_inc = dy / passos
         
         # 4. Define o ponto de partida (usamos float porque vamos somar decimais a eles)
-        x = float(x1)
-        y = float(y1)
+        x = float(self.x1)
+        y = float(self.y1)
         
         # 5. Loop de rasterização: damos um passo de cada vez até o destino
         for i in range(passos + 1):
