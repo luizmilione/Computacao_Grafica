@@ -1,5 +1,6 @@
 import pygame
 import sys
+from utils.classes import Reta
 
 def desenhar_reta_DDA(t1, t2):
     print("Traçando reta usando o algoritmo DDA")
@@ -76,7 +77,10 @@ while rodando:
                     pontos_reta.append(tupla)
                     print("Primeiro clique capturado")
                 if len(pontos_reta) == 2:
-                    desenhar_reta_DDA(pontos_reta[0], pontos_reta[1])
+                    # desenhar_reta_DDA(pontos_reta[0], pontos_reta[1])
+                    reta = Reta(pontos_reta[0], pontos_reta[1])
+                    reta.reta_dda(tela)
+                    array_estruturas.append(reta)
                     modo_atual = "livre"
                     print(f"Mudando o modo para {modo_atual}")
                     continue
