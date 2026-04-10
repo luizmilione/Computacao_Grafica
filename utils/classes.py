@@ -114,3 +114,114 @@ class Circunferencia:
                 y -= 1
                 
             x += 1
+
+class Recorte:
+    # Constantes em binário para facilitar a leitura (Bitmask)
+    DENTRO = 0   # 0000
+    ESQUERDA = 1 # 0001
+    DIREITA = 2  # 0010
+    BAIXO = 4    # 0100
+    CIMA = 8     # 1000
+
+    def __init__(self, x_min, y_min, x_max, y_max):
+        # Ajeitei os nomes para combinar com a lógica min/max tradicional
+        self.x_min = x_min
+        self.y_min = y_min
+        self.x_max = x_max
+        self.y_max = y_max
+
+    def obter_codigo(self, x, y):
+        """Calcula o código de região de 4 bits para um ponto X, Y"""
+        codigo = self.DENTRO
+        
+        if x < self.x_min:      # À esquerda
+            codigo |= self.ESQUERDA
+        elif x > self.x_max:    # À direita
+            codigo |= self.DIREITA
+            
+        if y < self.y_min:      # Acima (Pygame Y invertido)
+            codigo |= self.CIMA
+        elif y > self.y_max:    # Abaixo
+            codigo |= self.BAIXO
+            
+        return codigo
+
+    def processar_reta(self, x1, y1, x2, y2):
+        """Executa o algoritmo para uma única reta e retorna as novas coordenadas (ou None)"""
+        codigo1 = self.obter_codigo(x1, y1)
+        codigo2 = self.obter_codigo(x2, y2)
+        aceita = False
+
+        while True:
+            # 1. Aceitação Trivial: Ambos estão DENTRO (0000 | 0000 == 0)
+            if codigo1 == 0 and codigo2 == 0:
+                aceita = True
+                break
+                
+            # 2. Rejeição Trivial: Ambos estão fora na mesma zona (AND bit a bit != 0)
+            elif (codigo1 & codigo2) != 0:
+                break
+                
+            # 3. Recorte Necessário: Pelo menos um ponto está fora, vamos encontrar a interseção
+            else:
+                # Escolhe o ponto que está fora (se código1 for 0, pega o código2)
+                codigo_fora = codigo1 if codigo1 != 0 else codigo2
+                x, y = 0.0, 0.0
+
+                # Encontra o ponto de interseção usando a fórmula: y = y1 + slope * (x - x1)
+                # ou x = x1 + (1 / slope) * (y - y1)
+                
+                if codigo_fora & self.CIMA:
+                    # Ponto está acima da janela
+                    x = x1 + (x2 - x1) * (self.y_min - y1) / (y2 - y1)
+                    y = self.y_min
+                elif codigo_fora & self.BAIXO:
+                    # Ponto está abaixo da janela
+                    x = x1 + (x2 - x1) * (self.y_max - y1) / (y2 - y1)
+                    y = self.y_max
+                elif codigo_fora & self.DIREITA:
+                    # Ponto está à direita
+                    y = y1 + (y2 - y1) * (self.x_max - x1) / (x2 - x1)
+                    x = self.x_max
+                elif codigo_fora & self.ESQUERDA:
+                    # Ponto está à esquerda
+                    y = y1 + (y2 - y1) * (self.x_min - x1) / (x2 - x1)
+                    x = self.x_min
+
+                # Substitui o ponto que estava fora pela interseção encontrada
+                if codigo_fora == codigo1:
+                    x1, y1 = x, y
+                    codigo1 = self.obter_codigo(x1, y1)
+                else:
+                    x2, y2 = x, y
+                    codigo2 = self.obter_codigo(x2, y2)
+
+        if aceita:
+            return (round(x1), round(y1), round(x2), round(y2))
+        else:
+            return None # A reta foi totalmente rejeitada e não deve ser desenhada
+    
+    def aplicar_recorte_na_tela(self, tela, array_estruturas):
+        array_temporarias = []
+        # Varre todos os objetos
+        for objeto in array_estruturas:
+            
+            # Checa se o objeto é da classe Reta (algoritmo é exclusivo para retas)
+            if isinstance(objeto, Reta):
+                
+                # Tenta recortar usando as coordenadas originais do objeto
+                resultado = self.processar_reta(objeto.x1, objeto.y1, objeto.x2, objeto.y2)
+                
+                # Se o algoritmo retornou coordenadas (Aceitou ou Recortou)
+                if resultado is not None:
+                    # Atualiza os valores da reta temporariamente
+                    nx1, ny1, nx2, ny2 = resultado
+                    
+                    # Desenha a linha recortada (assumindo que você tem acesso às funções de desenho aqui)
+                    # Você pode criar um método temporário ou instanciar uma Reta nova aqui só para desenhar
+                    ini = (nx1, ny1)
+                    fi = nx2, ny2
+                    reta_recortada = Reta(ini, fi)
+                    reta_recortada.reta_bresenham(tela)
+                    array_temporarias.append(reta_recortada)
+

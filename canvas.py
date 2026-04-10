@@ -1,16 +1,16 @@
 import pygame
 import sys
-from utils.classes import Reta, Circunferencia
+from utils.classes import Reta, Circunferencia, Recorte
 
-# 1. Inicialização ⚙️
+# Inicialização
 pygame.init() # "Liga" todos os módulos do Pygame
 
-# 2. Configuração da Tela 🖥️
+# Configuração da Tela
 largura = 1500
 altura = 850
 # Cria a janela onde vamos desenhar
 tela = pygame.display.set_mode((largura, altura))
-pygame.display.set_caption("Meu Quadro Branco de CG")
+pygame.display.set_caption("Trabalho Prático 1 - Computação Gráfica")
 
 # Define algumas cores no formato RGB (Red, Green, Blue)
 BRANCO = (255, 255, 255)
@@ -35,9 +35,13 @@ tela.blit(imagem_texto, (100, 10))
 pygame.draw.rect(tela, AZUL, (210, 0, 110, 40))
 imagem_texto = fonte_menu.render("Circulo", True, BRANCO)
 tela.blit(imagem_texto, (215, 10))
+# Recorte Cohen-Sutherland
+pygame.draw.rect(tela, VERMELHO, (320, 0, 190, 40))
+imagem_texto = fonte_menu.render("Cohen-Sutherland", True, BRANCO)
+tela.blit(imagem_texto, (325, 10))
 
 
-# 3. Loop Principal 🔄
+# Loop Principal
 rodando = True
 modo_atual = "livre"
 pontos_reta = []
@@ -61,32 +65,42 @@ while rodando:
                 pygame.draw.rect(tela, BRANCO, (993, 0, 500, 40))
                 imagem_texto = fonte_menu.render(texto_digitado, True, PRETO)
                 tela.blit(imagem_texto, (993, 10))
+
         if evento.type == pygame.MOUSEBUTTONDOWN:
             tupla = evento.pos
 
             # Usuário clicou no menu
             if (tupla[1] < 40):
-                print(f"Pontos X: {tupla[0]}, Y: {tupla[1]}")
                 if tupla[0] < 100:
                     modo_atual = "reta"
                     print(f"Mudando o modo para {modo_atual}")
                     pontos_reta.clear()
+                    imagem_texto = fonte_menu.render("Escolha os pontos inicial e final da reta", True, PRETO)
+                    tela.blit(imagem_texto, (750, 10))
                     continue
                 elif tupla[0] >= 100 and tupla[0] < 210:
                     modo_atual = "reta2"
                     print(f"Mudando o modo para {modo_atual}")
                     pontos_reta.clear()
+                    imagem_texto = fonte_menu.render("Escolha os pontos inicial e final da reta", True, PRETO)
+                    tela.blit(imagem_texto, (750, 10))
                     continue
-                elif tupla[0] >= 210 and tupla[0] < 330:
+                elif tupla[0] >= 210 and tupla[0] < 320:
                     modo_atual = "circulo"
                     print(f"Mudando o modo para {modo_atual}")
                     pontos_reta.clear()
                     imagem_texto = fonte_menu.render("Digite o Raio do circulo: ", True, PRETO)
                     tela.blit(imagem_texto, (750, 10))
                     continue
-
+                elif tupla[0] >= 320 and tupla[0] < 520:
+                    modo_atual = "recorte"
+                    print(f"Mudando o modo para {modo_atual}")
+                    pontos_reta.clear()
+                    imagem_texto = fonte_menu.render("Escolha o ponto superior esquerdo e o inferior direito", True, PRETO)
+                    tela.blit(imagem_texto, (750, 10))
+                    
             # Estamos capturando os cliques que querem fazer uma reta
-            if modo_atual == "reta" or modo_atual == "reta2":
+            elif modo_atual == "reta" or modo_atual == "reta2":
                 if len(pontos_reta) < 2:
                     pontos_reta.append(tupla)
                     print("Primeiro clique capturado")
@@ -101,9 +115,10 @@ while rodando:
                     pontos_reta.clear()
                     modo_atual = "livre"
                     print(f"Mudando o modo para {modo_atual}")
+                    pygame.draw.rect(tela, BRANCO, (750, 0, 750, 40))
                     continue
 
-            if modo_atual == "circulo":
+            elif modo_atual == "circulo":
                 if texto_digitado != "":
                     circulo = Circunferencia(tupla[0], tupla[1], int(texto_digitado))
                     circulo.circ_Bresenham(tela)
@@ -114,13 +129,22 @@ while rodando:
                     pygame.draw.rect(tela, BRANCO, (750, 0, 750, 40))
                     continue
 
+            elif modo_atual == "recorte":
+                if len(pontos_reta) < 2:
+                    pontos_reta.append(tupla)
+                    print("Primeiro clique capturado")
+                if len(pontos_reta) == 2:
+                    inicio = pontos_reta[0]
+                    fim = pontos_reta[1]
+                    pygame.draw.rect(tela, BRANCO, (0, 40, largura, altura))
+                    pygame.draw.rect(tela, (255, 0, 0), (inicio[0], inicio[1], fim[0] - inicio[0], fim[1] - inicio[1]), 2)
+                    recorte = Recorte(inicio[0], inicio[1], fim[0], fim[1])
+                    recorte.aplicar_recorte_na_tela(tela, array_estruturas)
+                    pygame.draw.rect(tela, BRANCO, (750, 0, 750, 40))
+                    continue
 
-            # if modo_atual == "livre": 
-            #     print(f"Desenhando em {tupla[0]}, {tupla[1]}")
-            #     for i in range(0, 800):
-            #         tela.set_at((i, tupla[1]), PRETO)
-            #     for j in range(0, 600):
-            #         tela.set_at((tupla[0], j), PRETO)
+
+            
 
         if evento.type == pygame.QUIT:
             rodando = False
@@ -128,7 +152,7 @@ while rodando:
    
 
 
-    # 5. Atualização da Tela
+    # Atualização da Tela
     # Pega tudo o que foi desenhado na memória e joga para o monitor
     pygame.display.flip()
 
